@@ -1,296 +1,246 @@
-IoT Data Collection, Storage and Preprocessing
 
-Học phần: IoT và Ứng dụng (INT14149)
-Sinh viên: Doãn Dình Hải
-Mã sinh viên: B23DCCN269
+# README - HE THONG IOT
 
-1. Giới thiệu
+## 1. Gioi thieu
 
-Dự án xây dựng hệ thống thu thập, lưu trữ và tiền xử lý dữ liệu IoT từ ESP32 mô phỏng trên Wokwi.
+Du an thu thap, luu tru va tien xu ly du lieu IoT tu ESP32 mo phong tren Wokwi.
 
-Hệ thống sử dụng ThingsBoard để tiếp nhận telemetry, Python để thu thập dữ liệu, InfluxDB Cloud 2.x để lưu trữ dữ liệu chuỗi thời gian và Python/Pandas để tiền xử lý.
+He thong su dung ThingsBoard de tiep nhan telemetry va InfluxDB Cloud 2.x de luu tru du lieu.
 
-Kiến trúc hệ thống
-ESP32 (Wokwi)
-    |
-    | MQTT telemetry
-    v
-ThingsBoard Cloud
-    |
-    | REST API
-    v
-mqtt_to_influx.py
-    |
-    | Raw data
-    v
-InfluxDB Cloud
-    |
-    | Query raw data
-    v
-preprocessing.py
-    |
-    | Cleaned and processed data
-    v
-InfluxDB Cloud
+Hai chuong trinh chinh:
 
-2. Công nghệ sử dụng
-Python 3
-ESP32 và cảm biến DHT22, HC-SR04
-ThingsBoard Cloud
-InfluxDB Cloud 2.x
-paho-mqtt
-requests
-influxdb-client
-pandas
-numpy
-python-dotenv
-3. Cấu trúc thư mục
+- mqtt_to_influx.py: Thu thap du lieu va ghi vao InfluxDB.
+- preprocessing.py: Doc du lieu tho, lam sach, chuan hoa va ghi du lieu da xu ly.
+
+## 2. Cau truc thu muc
+
+```text
 IoT/
-├── .venv/
-├── .env
-├── .gitignore
-├── mqtt_to_influx.py
-├── preprocessing.py
-└── README.md
+|-- .venv/
+|-- .env
+|-- mqtt_to_influx.py
+|-- preprocessing.py
+|-- README.md
+|-- .gitignore
+```
 
-4. Yêu cầu trước khi chạy
-4.1. Cài đặt Python
+## 3. Cai dat moi truong
 
-Cài Python tương thích với các thư viện trong dự án. Khuyến nghị Python 3.10 hoặc mới hơn.
+Mo PowerShell tai thu muc du an:
 
-Kiểm tra phiên bản:
-
-python --version
-
-4.2. Tạo môi trường ảo
-
-Mở PowerShell tại thư mục dự án:
-
+```powershell
 cd C:\Users\Admin\Desktop\IoT
+```
 
+Tao moi truong ao:
+
+```powershell
 python -m venv .venv
+```
 
+Kich hoat moi truong ao:
+
+```powershell
 .\.venv\Scripts\Activate.ps1
+```
 
+Cai dat cac thu vien:
 
-Nếu PowerShell chặn việc kích hoạt môi trường ảo, có thể chạy:
-
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\.venv\Scripts\Activate.ps1
-
-4.3. Cài đặt thư viện
+```powershell
 python -m pip install --upgrade pip
-
 pip install requests influxdb-client pandas numpy python-dotenv paho-mqtt
+```
 
-4.4. Chuẩn bị InfluxDB Cloud
+## 4. Cau hinh file .env
 
-Trong InfluxDB Cloud, cần chuẩn bị:
+Tao file co ten chinh xac la `.env` trong thu muc du an.
 
-Organization: Ptit
-Raw bucket: iot_data
-Processed bucket: iot_processed
-API Token có quyền ghi vào bucket dữ liệu xử lý và quyền đọc dữ liệu thô.
+Noi dung:
 
-Nếu chưa có bucket, hãy tạo hai bucket trên giao diện InfluxDB Cloud.
-
-Lưu ý: Tên Organization và bucket phải khớp chính xác với cấu hình thực tế.
-
-4.5. Chuẩn bị ThingsBoard
-ESP32 phải gửi telemetry thành công lên ThingsBoard.
-Lấy Device ID của thiết bị ESP32.
-Chuẩn bị API Key có quyền đọc telemetry nếu phiên bản ThingsBoard đang dùng hỗ trợ loại xác thực này.
-
-Device Access Token dùng để thiết bị gửi MQTT không mặc nhiên là REST API Key.
-
-5. Cấu hình biến môi trường
-
-Tạo file .env tại thư mục gốc của dự án:
-
-# ThingsBoard
+```dotenv
 TB_HOST=https://thingsboard.cloud
 TB_API_KEY=YOUR_THINGSBOARD_API_KEY
 TB_DEVICE_ID=YOUR_DEVICE_UUID
 
-# InfluxDB Cloud
 INFLUX_URL=https://YOUR_INFLUXDB_HOST
 INFLUX_TOKEN=YOUR_INFLUXDB_TOKEN
 INFLUX_ORG=Ptit
 
-# Buckets
 RAW_BUCKET=iot_data
 PROCESSED_BUCKET=iot_processed
 
-# Raw data configuration
 DEVICE_ID=ESP32_BAI2
-LOOKBACK=-24h
 
-# Preprocessing
+LOOKBACK=-24h
 PREPROCESS_CONTINUOUS=false
 PREPROCESS_INTERVAL=60
+```
 
+Thay cac gia tri mau bang thong tin thuc te.
 
-Thay các giá trị mẫu bằng thông tin thật.
+Luu y:
+- INFLUX_ORG phai dung ten Organization tren InfluxDB.
+- RAW_BUCKET la bucket chua du lieu tho.
+- PROCESSED_BUCKET la bucket chua du lieu da xu ly.
+- TB_DEVICE_ID la UUID cua thiet bi tren ThingsBoard.
+- DEVICE_ID phai khop voi tag device_id trong du lieu tho.
+- API Key ThingsBoard phai duoc ho tro boi phien ban dang su dung va co quyen doc telemetry.
 
-TB_API_KEY: API Key được ThingsBoard hỗ trợ cho REST API.
-TB_DEVICE_ID: UUID của thiết bị trên ThingsBoard.
-INFLUX_URL: URL của InfluxDB Cloud.
-INFLUX_TOKEN: token truy cập InfluxDB.
-INFLUX_ORG: Organization thực tế.
-DEVICE_ID: tag device_id có trong dữ liệu thô.
+## 5. Chay chuong trinh thu thap du lieu
 
-Không chia sẻ file .env công khai hoặc tải file này lên GitHub.
+### Buoc 1: Khoi dong ESP32
 
-Kiểm tra tên measurement
+Mo mo phong ESP32 tren Wokwi va nhan Start.
 
-Trong preprocessing.py, mặc định:
+Kiem tra Serial Monitor de dam bao ESP32 gui telemetry len ThingsBoard thanh cong.
 
-RAW_MEASUREMENT = "sensor_data"
-PROCESSED_MEASUREMENT = "sensor_processed"
+### Buoc 2: Chay mqtt_to_influx.py
 
+Trong PowerShell:
 
-Tên measurement của dữ liệu thô phải khớp với mqtt_to_influx.py. Nếu Collector ghi vào sensor_raw, hãy sửa RAW_MEASUREMENT thành sensor_raw.
-
-6. Chạy chương trình thu thập dữ liệu
-Bước 1: Khởi chạy ESP32
-
-Mở mô phỏng Wokwi và chạy chương trình ESP32.
-
-Kiểm tra Serial Monitor để xác nhận thiết bị gửi telemetry thành công.
-
-Bước 2: Chạy Collector
-
-Mở Terminal tại thư mục dự án và kích hoạt .venv:
-
-.\.venv\Scripts\Activate.ps1
+```powershell
 python mqtt_to_influx.py
+```
 
+Chuong trinh se doc telemetry tu ThingsBoard va ghi du lieu tho vao InfluxDB.
 
-Nếu cấu hình đúng, chương trình sẽ kết nối ThingsBoard, đọc telemetry và ghi dữ liệu vào InfluxDB.
+Kiem tra du lieu trong InfluxDB Cloud bang Data Explorer.
 
-Kiểm tra dữ liệu trong InfluxDB Cloud bằng Data Explorer.
+## 6. Chay chuong trinh tien xu ly
 
-Nếu không có dữ liệu, kiểm tra:
+Sau khi du lieu tho da duoc ghi vao InfluxDB, mo Terminal va chay:
 
-API Key và quyền truy cập thiết bị.
-Device ID.
-URL và token InfluxDB.
-Tên bucket và measurement.
-Các trường telemetry: temperature, humidity, distance_cm.
-
-Lưu ý: Collector sử dụng REST API polling nên cần API Key tương thích với ThingsBoard. Nếu ThingsBoard không hỗ trợ loại API Key đó, cần đổi phương thức xác thực trước khi chạy Collector.
-
-7. Chạy chương trình tiền xử lý
-
-Sau khi dữ liệu thô đã được lưu vào InfluxDB, mở một Terminal khác hoặc dừng Collector bằng Ctrl+C.
-
-Chạy:
-
+```powershell
 python preprocessing.py
+```
 
+Chuong trinh thuc hien:
 
-Chương trình thực hiện:
+1. Doc du lieu tho tu InfluxDB.
+2. Xu ly gia tri thieu bang noi suy.
+3. Phat hien va xu ly outlier bang phuong phap IQR.
+4. Resample du lieu theo cua so 1 phut.
+5. Tao dac trung temp_rolling_mean voi cua so 3 mau.
+6. Chuan hoa Min-Max ve khoang [0, 1].
+7. Ghi du lieu da xu ly vao measurement sensor_processed.
 
-Đọc dữ liệu thô trong khoảng thời gian cấu hình.
-Chuyển timestamp sang UTC và loại bản ghi trùng timestamp.
-Resample dữ liệu thành các cửa sổ một phút.
-Nội suy các khoảng thiếu ngắn.
-Phát hiện outlier bằng phương pháp IQR.
-Tính trung bình trượt nhiệt độ trên ba mẫu.
-Chuẩn hóa nhiệt độ, độ ẩm và khoảng cách về khoảng [0, 1].
-Ghi kết quả vào measurement sensor_processed.
+### Chay tien xu ly lien tuc
 
-Kết quả được lưu vào bucket iot_processed.
+Sua file `.env`:
 
-Chạy tiền xử lý định kỳ
-
-Để tự động xử lý mỗi 60 giây, cập nhật file .env:
-
+```dotenv
 PREPROCESS_CONTINUOUS=true
 PREPROCESS_INTERVAL=60
+```
 
+Chay lai:
 
-Sau đó chạy lại:
-
+```powershell
 python preprocessing.py
+```
 
+Nhan Ctrl+C de dung chuong trinh.
 
-Dừng bằng Ctrl+C.
+## 7. Schema du lieu
 
-Lưu ý: Chế độ định kỳ hiện tại xử lý lại cửa sổ dữ liệu đã cấu hình. Khi triển khai lâu dài, nên bổ sung checkpoint hoặc chỉ xử lý dữ liệu mới để tránh tính toán lặp.
+### 7.1. Du lieu tho
 
-8. Kiểm tra dữ liệu trong InfluxDB
+- Bucket: iot_data
+- Measurement: sensor_data
+- Tag: device_id
+- Fields:
+  - temperature
+  - humidity
+  - distance_cm
+  - rssi
+  - sequence
 
-Trong InfluxDB Cloud:
+Luu y: Neu mqtt_to_influx.py dang ghi vao measurement sensor_raw, can sua RAW_MEASUREMENT trong preprocessing.py thanh sensor_raw.
 
-Mở Data Explorer.
-Chọn bucket iot_data để kiểm tra dữ liệu thô.
-Chọn bucket iot_processed để kiểm tra dữ liệu đã xử lý.
-Chọn khoảng thời gian phù hợp, ví dụ Last 24 hours.
+### 7.2. Du lieu da xu ly
 
-Các trường trong sensor_processed:
+- Bucket: iot_processed
+- Measurement: sensor_processed
+- Tag: device_id
+- Fields:
+  - temperature
+  - humidity
+  - distance_cm
+  - temp_rolling_mean
+  - temp_scaled
+  - hum_scaled
+  - dist_scaled
 
-Field	Ý nghĩa
-temperature	Nhiệt độ sau tiền xử lý
-humidity	Độ ẩm sau tiền xử lý
-distance_cm	Khoảng cách sau tiền xử lý
-temp_rolling_mean	Trung bình trượt nhiệt độ ba mẫu
-temp_scaled	Nhiệt độ chuẩn hóa Min-Max
-hum_scaled	Độ ẩm chuẩn hóa Min-Max
-dist_scaled	Khoảng cách chuẩn hóa Min-Max
-9. Xử lý lỗi thường gặp
-Lỗi KeyError khi đọc biến môi trường
+## 8. Kiem tra tren InfluxDB
 
-Nguyên nhân: thiếu biến trong .env hoặc file không được tải.
+1. Dang nhap InfluxDB Cloud.
+2. Mo Data Explorer.
+3. Chon bucket iot_data de xem du lieu tho.
+4. Chon bucket iot_processed de xem du lieu da xu ly.
+5. Chon khoang thoi gian Last 24 hours.
 
-Khắc phục:
+## 9. Xu ly loi thuong gap
 
-Đảm bảo .env nằm cùng thư mục với file Python.
-Gọi load_dotenv() trước khi đọc biến môi trường.
-Kiểm tra tên biến và khởi chạy từ thư mục dự án.
-Lỗi 401 Unauthorized
+### Loi KeyError
 
-Nguyên nhân: token không hợp lệ hoặc không có quyền truy cập.
+Kiem tra file `.env`, ten bien moi truong va lenh load_dotenv().
 
-Khắc phục:
+### Loi 401 Unauthorized
 
-Kiểm tra API Key ThingsBoard.
-Kiểm tra InfluxDB token.
-Đảm bảo không nhầm Device Access Token với REST API Key.
-Lỗi 404 Organization not found
+Kiem tra API Key ThingsBoard hoac INFLUX_TOKEN.
 
-Nguyên nhân: tên Organization không khớp.
+### Loi 404 Organization Not Found
 
-Khắc phục:
+Kiem tra INFLUX_ORG co dung ten Organization hay khong.
 
-Kiểm tra Organization trong giao diện InfluxDB.
-Cập nhật INFLUX_ORG trong .env.
-Không tìm thấy dữ liệu thô
+### Loi Bucket Not Found
 
-Nguyên nhân:
+Kiem tra RAW_BUCKET va PROCESSED_BUCKET da ton tai tren InfluxDB hay chua.
 
-ESP32 chưa gửi telemetry.
-Collector chưa ghi thành công.
-Tên measurement, bucket hoặc device_id bị sai.
-Khoảng thời gian truy vấn không chứa dữ liệu.
+### Khong co du lieu
 
-Khắc phục: kiểm tra dữ liệu trong Data Explorer và đối chiếu cấu hình trong preprocessing.py.
+Kiem tra:
+- ESP32 da gui telemetry thanh cong.
+- mqtt_to_influx.py da ghi du lieu vao InfluxDB.
+- Ten measurement va device_id chinh xac.
+- LOOKBACK bao gom khoang thoi gian co du lieu.
 
-Lỗi ghi dữ liệu do NaN
+### Loi NaN khi ghi du lieu
 
-Nguyên nhân: dữ liệu thiếu hoặc không hợp lệ.
+Loai bo gia tri NaN va vo cuc truoc khi tao Point().
 
-Khắc phục: bỏ qua các giá trị NaN và vô cực trước khi tạo Point().
+## 10. Danh gia he thong
 
-10. Lưu ý về độ chính xác dữ liệu
-Nội suy chỉ nên áp dụng cho khoảng thiếu ngắn.
-IQR có thể loại nhầm biến động thực tế của cảm biến.
-Min-Max Scaling trên từng batch có thể khiến giá trị chuẩn hóa thay đổi khi dữ liệu mới xuất hiện.
-Dữ liệu được resample mỗi phút nên không còn thể hiện đầy đủ biến động ở chu kỳ năm giây.
-Cần phân biệt thời gian đo, thời gian nhận dữ liệu và thời gian ghi database khi đánh giá độ trễ end-to-end.
-11. Thứ tự chạy toàn hệ thống
-Chạy mô phỏng ESP32 trên Wokwi.
-Kiểm tra telemetry trên ThingsBoard.
-Chạy mqtt_to_influx.py để thu thập và lưu dữ liệu thô.
-Chạy preprocessing.py để xử lý dữ liệu.
-Ki
+ESP32 gui du lieu moi 5 giay. Neu hoat dong lien tuc, mot thiet bi tao khoang 17.280 ban ghi moi ngay.
+
+Tien xu ly giup:
+- Xu ly gia tri thieu.
+- Phat hien gia tri bat thuong.
+- Lam min chuoi thoi gian.
+- Chuan hoa du lieu.
+- Tao dac trung phuc vu phan tich.
+
+## 11. Bao mat
+
+Tao file `.gitignore`:
+
+```gitignore
+.venv/
+.env
+__pycache__/
+*.pyc
+```
+
+Khong cong khai API Key, InfluxDB Token hoac mat khau tren GitHub.
+
+## 12. Thu tu chay he thong
+
+1. Khoi dong ESP32 tren Wokwi.
+2. Kiem tra telemetry tren ThingsBoard.
+3. Chay mqtt_to_influx.py.
+4. Kiem tra du lieu tho trong InfluxDB.
+5. Chay preprocessing.py.
+6. Kiem tra measurement sensor_processed.
+7. Chay dashboard neu co.
+
+Ket qua mong doi: Du lieu tu ESP32 duoc thu thap, luu tru trong InfluxDB Cloud, tien xu ly va san sang cho viec truc quan hoa.
